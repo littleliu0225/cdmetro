@@ -1,0 +1,252 @@
+// data={name:["30号线","Line 30","30"],color:"#F67599",stations:{"a":{name:["龙泉驿火车站南","Longquanyi Railway Station South"],next:["b"],id:"01"},"b":{name:["玉虹路","Yuhong Road"],next:["c"],back:['a'],no_serve:true,id:"02"},"c":{name:["分水","Fenshui"],back:['b'],next:["d"],no_serve:true,id:"03"},"d":{name:["玉石","Yushi"],back:['c'],next:["e"],id:"04"},"e":{name:["惠王陵","Huiwangling"],back:['d'],next:["f"],interchange:[["2","#EB5A35"]],id:"04"},"f":{name:["航天立交","Hangtian Flyover"],back:['e'],next:["g"],id:"05"},"g":{name:["海桐街","Haitong Street"],back:['f'],next:["h"],id:"06"},"h":{name:["娇子立交","Jiaozi Flyover"],back:['g'],next:["i"],interchange:[["13","#C5A900"]],id:"07"},"i":{name:["多线换乘测试","The Interchange Test"],back:['h'],next:["x"],interchange:[["1","#222A8C"],["14","#6F263D"]],id:"08"},"x":{name:["双流机场2号航站楼东","Terminal 2 Shuangliu\nInternational Airport East"],interchange:[["19","#89ABE3"]],back:['i'],id:"09"},},start:"a",selected:"f",to_left:false,left_door:true,a_width:650,height:200,b_width:650,a_top:60,margin:50,new:true};
+var data;
+
+
+function textalign(text,x,y,way='left',ho="top"){return text.x(x-(way=="left"?0:text.bbox().width/(way=="center"?2:1))).y(y-(ho=="top"?0:text.bbox().height/(ho=="center"?2:1)));}
+function next_station(id,to_left){var xid=id;do{xid=data.stations[xid][to_left?'next':'back'][0];}while(data.stations[xid].no_serve&&data.stations[xid][to_left?'next':'back']);return xid;}
+function interchange2(draw,x,y,color,ali='middle'){
+    var b1=draw.path('M4.56,15.44H4.17c-2.16,0-3.92-1.75-3.92-3.92V4.17C0.25,2,2,0.25,4.17,0.25h0.39c2.16,0,3.92,1.75,3.92,3.92v7.35C8.48,13.69,6.72,15.44,4.56,15.44z').stroke({width:0.75,color:color[0]}).fill("#fff");
+    x-=b1.bbox().width*(ali=="right"?0:1)/(ali=='middle'?2:1);
+    textalign(b1,x+3,y,'right');
+    textalign(draw.path('M2.26,8.38V3.89C2.6,2.89,3.54,2.21,4.57,2.2c1.11-0.01,2.1,0.77,2.39,1.87'),x+1.25,y+2,'right').stroke({width:0.75,color:color[1]}).fill("#ffffff00");
+    textalign(draw.polygon([[1.17,8.34],[3.36,8.34],[2.26,10.52]]),x-2.35,y+8,'right').fill(color[1]);
+    textalign(draw.path('M6.78,7.15v4.14c-0.09,1.25-1.13,2.23-2.38,2.25c-1.24,0.02-2.31-0.93-2.44-2.17'),x+1.25,y+7,'right').stroke({width:0.75,color:color[0]}).fill("#ffffff00");
+    textalign(draw.polygon([[7.87,7.15],[5.68,7.15],[6.78,4.96]]),x+2.35,y+5,'right').fill(color[0]);
+    return b1.bbox().height;
+}
+function interchange3(draw,x,y,color,ali='middle'){
+    var b1=draw.path('M4.56,15.44H4.17c-2.16,0-3.92-1.75-3.92-3.92V4.17C0.25,2,2,0.25,4.17,0.25h0.39c2.16,0,3.92,1.75,3.92,3.92v7.35C8.48,13.69,6.72,15.44,4.56,15.44z').stroke({width:0.75,color:color[0]}).fill("#fff");
+    x-=b1.bbox().width*(ali=="right"?0:1)/(ali=='middle'?2:1);
+    textalign(b1,x+3,y,'right');
+    textalign(draw.path('M6.57,6.93c0-0.82,0.01-1.64,0.01-2.47c-0.01-0.2-0.07-0.67-0.41-1.11c-0.23-0.31-0.53-0.49-0.6-0.53C5.38,2.7,5.2,2.64,5.07,2.6'),x+1.25,y+2,'right').stroke({width:0.75,color:color[1]}).fill("#ffffff00");
+    textalign(draw.polygon([[3.4,2.33],[5.56,1.6],[5.34,3.6]]),x-0.05,y+1,'right').fill(color[1]);
+    textalign(draw.path('M2.76,2.57c-0.1,0.1-0.26,0.27-0.38,0.52C2.24,3.37,2.22,3.63,2.21,3.77v5.15'),x-2.85,y+2.5,'right').stroke({width:0.75,color:color[2]}).fill("#ffffff00");
+    textalign(draw.polygon([[1.05,8.92],[3.38,8.92],[2.21,11.02]]),x-2.15,y+8.5,'right').fill(color[2]);
+    textalign(draw.path('M2.15,11.7c0.06,1.23,1.11,2.19,2.3,2.14c1.15-0.04,2.09-1,2.13-2.18V9.92'),x+1,y+9.5,'right').stroke({width:0.75,color:color[0]}).fill("#ffffff00");
+    textalign(draw.polygon([[5.28,9.92],[7.81,9.92],[6.55,7.54]]),x+2.25,y+7.5,'right').fill(color[0]);
+    return b1.bbox().height;
+}
+function svg2png(svgText,w,h,s=1,name='export') {
+    const img=new Image();
+    img.src=`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgText)}`;
+    img.onload=()=>{
+        const canvas=document.createElement('canvas');
+        const ctx=canvas.getContext('2d');
+        const dpr=s;
+        canvas.width=w*dpr;
+        canvas.height=h*dpr;
+        ctx.scale(dpr,dpr);
+        ctx.drawImage(img,0,0);
+        const url=canvas.toDataURL(`image/png`);
+        const a=document.createElement('a');
+        a.href=url;
+        a.download=name+'.png';
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+}
+function buildPath({x,y,h,w,angle=48}) {
+  const θ=angle*Math.PI/180;
+  const sin=Math.sin(θ);
+  const cos=Math.cos(θ);
+  const A=[-h/sin,0];
+  const B=[0,0];
+  const C=[cos*w,sin*w];
+  const D=[C[0]-h*sin,C[1]+h*cos];
+  return [`M ${A[0]} ${-A[1]} L ${D[0]} ${-D[1]} L ${C[0]} ${-C[1]} L ${B[0]} ${-B[1]} Z`,[(C[0]+D[0])/2,(C[1]+D[1])/2]];
+}
+
+function loads(data){
+    var stations=[];
+    var next=data.start;
+    var num=0;
+    while(next){
+        var _=data.stations[next];
+        _['key']=next;
+        stations.push(_);
+        next=data.stations[next].next;
+        if(next)next=next[0];
+        else break;
+        if(++num>=1145)break;//应该没有谁家地铁有1145个站吧，这里防止死循环
+    }
+    return stations;
+}
+function countA(data){
+    var num=0;
+    var next=data.start;
+    while(next){
+        next=data.stations[next].next;
+        if(next)next=next[0];
+        if(++num>=1145)break;//应该没有谁家地铁有1145个站吧，这里防止死循环
+    }
+    return num;
+}
+function countB(data){
+    var num=0;
+    var cnt=0;
+    var next=data.start;
+    while(next){
+        if(++num>=1145)break;//应该没有谁家地铁有1145个站吧，这里防止死循环
+        var b=data.stations[next].no_serve;
+        next=data.stations[next].next;
+        if(next)next=next[0];
+        if(!b)cnt++;
+    }
+    return cnt;
+}
+async function loadFontAsDataURL(url) {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+    });
+}
+async function generate(data) {
+    var scroll=document.querySelector("#draw").scrollLeft;
+    var stations=loads(data);
+    document.querySelector("#draw").innerHTML='';
+    var x=data.a_width/2,y=data.a_top;
+    const draw0=SVG().addTo('#draw');
+    const draw=draw0.group();
+    draw.scale(data.scale);
+    var barY;
+    var flt='FrutigerLT55Roman';
+    var black=data.color_next?data.color:'#000';
+    {
+        var g0=draw.group();
+        g0.rect(data.a_width, data.height).fill('#fff').stroke({width:1,color:'#000'});
+        y+=textalign(g0.text(data.stations[data.selected].name[0]).font({family:'微软雅黑',size:24,anchor:'middle'}).fill(black),x,y,'center','top').bbox().height;
+        var g1=draw.group();
+        textalign(g1.text(data.stations[data.selected].name[1]).fill(black).font({family:flt,size:13,anchor:'middle'}),x,y,'center','top');
+        y+=g1.bbox().height+10;
+        draw.rect(data.a_width-data.margin,8).center(x,y+10).fill(data.color).radius(4);
+        barY=y+10;
+        textalign(draw.rect((data.a_width-data.margin)/2,8).fill('#a3a3a3').stroke({width:0.15,color:'#a3a3a3'}).radius(4),x,y+10,!data.left_door?'right':'left','center');
+        draw.rect(50, 20).center(x,y+10).fill('#fff').radius(10).stroke({width:1,color:data.color});
+        draw.path([['M',x,y],['L',x,y+20]]).stroke({width:1,color:data.color});
+        var ft=13;
+        var t=draw.text(data.name[2]).font({family:flt,size:ft,anchor:'middle',fill:data.color}).center(x-12.5,y+10-1.5);
+        while(t.bbox().width>24){ft-=0.1;t.font({size:ft}).center(x-12.5,y+10);}
+        ft=13;
+        t=draw.text(data.stations[data.selected].id).font({family:flt,size:13,anchor:'middle',fill:data.color}).center(x+12.5,y+10-1.5);
+        while(t.bbox().width>24){ft-=0.1;t.font({size:ft}).center(x+12.5,y+10);}
+        var end_sta=stations[0];
+        if(data.to_left){end_sta=stations[stations.length-1];}
+        var oy=y;
+        x=data.left_door?data.margin/2+5:data.a_width-(data.margin/2+5);
+        var way=data.left_door?'left':'right';
+        var u=data.left_door?1:-1;
+        var y_l=y;
+        var g3=draw.group();
+        y-=(last_height=textalign(g3.text(data.stations[data.stations[data.selected][data.to_left?'next':'back']]?"To "+end_sta.name[1]:"The Terminal Station").fill(black).font({family:flt,size:11,anchor:'left'}),x,y,way,'bottom').bbox().height)-3;
+        textalign(draw.text(data.stations[data.stations[data.selected][data.to_left?'next':'back']]?end_sta.name[0]+"方向":"终点站").fill(black).font({family:'微软雅黑',size:16,anchor:'left'}),x,y,way,'bottom').bbox().height;
+        y=y_l;
+        if(data.new){
+            var margin=data.margin/2+5;
+            var oy1=y;
+            var g2=draw.group();
+            var r=g2.rect(114,514).fill(data.color);
+            var b1=textalign(g2.text(data.name[1]).font({family:flt,size:15,anchor:'middle',fill:"#fff"}),data.left_door?data.a_width-margin:margin,y,'center','bottom');
+            y-=b1.bbox().height;
+            var b2=textalign(g2.text(data.name[0]).font({family:'微软雅黑',size:20,anchor:'middle',fill:"#fff"}),data.left_door?data.a_width-margin:margin,y,'center','bottom');
+            y-=b2.bbox().height;
+            var www=Math.max(b1.bbox().width,b2.bbox().width)+14;
+            r.size(www, oy1-y).radius((oy1-y)*0.2);
+            textalign(b1,data.left_door?data.a_width-margin-www/2:margin+www/2,oy1,'center','bottom');
+            textalign(b2,data.left_door?data.a_width-margin-www/2:margin+www/2,oy1-b1.bbox().height,'center','bottom');
+            textalign(r,data.left_door?data.a_width-margin:margin,oy1,data.left_door?'right':'left','bottom');
+        }
+        if(data.stations[data.stations[data.selected][data.to_left?'next':'back']]){
+            y=oy+20;
+            x+=u*(textalign(draw.polygon([[10.92*u,0],[17.96*u,0],[8.87*u,9.55],[28.43*u,9.55],[28.43*u,15.01],[9.78*u,15.01],[18.65*u,23.42],[11.14*u,23.42],[0,11.71]]),x,y,way).fill(black).bbox().width + 5);
+            y-=3;
+            y+=textalign(draw.text("下一站："+data.stations[next_station(data.selected,data.to_left)].name[0]).fill(black).font({family:'微软雅黑',size:14,anchor:'left'}),x,y,way).bbox().height;
+            textalign(draw.text("Next Station: "+data.stations[next_station(data.selected,data.to_left)].name[1]).fill(black).font({family:flt,size:9,anchor:'left'}),x,y,way);
+        }
+    }
+    if(data.b_width!=0){
+        draw.rect(data.b_width,data.height).fill('#fff').stroke({width:1,color:'#000'}).move(data.a_width,0);
+        x=data.a_width+data.b_width/2,y=barY;
+        draw.rect(data.b_width-data.margin,8).center(x,y).fill(data.color).radius(4);
+        var interchange_color=null;
+        if(data.to_left==data.left_door)stations=stations.reverse();
+        stations.every(function(item){if(item.interchange){interchange_color=item.interchange[0][1]};return interchange_color==null;});
+        if(interchange_color!=null){
+            var _y=data.height-20;
+            _y-=draw.text("Transfer Station").font({family:flt,size:4,anchor:'middle'}).move(data.a_width+data.margin/2+10,_y).bbox().height+3;
+            draw.text("换乘站").font({family:'微软雅黑',size:7,anchor:'middle'}).move(data.a_width+data.margin/2+10,_y);
+            interchange2(draw,data.a_width+data.margin/2+5,_y,[data.color,interchange_color],'right');
+        }
+        x=data.a_width+data.margin/2;
+        var ww=0;
+        var pass=false;
+        var rect=draw.rect(0,8).fill('#a3a3a3').stroke({width:0.15,color:'#a3a3a3'});
+        var rect2=draw.rect(8,8).radius(4).fill('#a3a3a3').stroke({width:0.15,color:'#a3a3a3'});
+        stations.forEach(i=>{
+            if(!data.left_door&&i.key!=data.selected)pass=!pass;
+            if(pass)ww+=(data.b_width-data.margin-30)/(stations.length-1);
+            var y_=y;
+            // console.log(pass,i.name[0]);
+            draw.rect(15, 6).center(x+15,y).fill('#fff').radius(3).stroke({width:0.5,color:data.color});
+            draw.path([['M',x+15,y-3],['L',x+15,y+3]]).stroke({width:0.5,color:data.color});
+            var ft=4;
+            //11.25=15-7.5/2
+            //18.75=15+7.5/2
+            var tt=draw.text(data.name[2]).font({family:flt,size:ft,anchor:'middle',fill:data.color}).center(x+11.25,y);
+            while(tt.bbox().width>7){ft-=0.1;tt.font({size:ft}).center(x+11.25,y);}
+            ft=4;
+            tt=draw.text(i.id).font({family:flt,size:4,anchor:'middle',fill:data.color}).center(x+18.75,y);
+            while(tt.bbox().width>7){ft-=0.1;tt.font({size:ft}).center(x+18.75,y);}
+            var path,rect3;
+            if(i.key==data.selected&&data.new){
+                path=draw.path();
+                rect3=draw.rect();
+            }
+            const group=draw.group();
+            var b1=textalign(group.text(i.name[1]).font({family:flt,size:4,anchor:'left',fill:(pass?"#a5a5a5":(i.key==data.selected?(data.new?"#fff":data.color):"#3e3a39"))}),x+18,y-5,'left','bottom');
+            var h=b1.bbox().height;
+            var b2=textalign(group.text(i.name[0]).font({family:'微软雅黑',size:7,anchor:'left',fill:(pass?"#a5a5a5":(i.key==data.selected?(data.new?"#fff":data.color):"#3e3a39"))}),x+18,y-5-h,'left','bottom');
+            if(i.no_serve){
+                var w=Math.max(b1.bbox().w,b2.bbox().w);
+                w+=textalign(group.text('(').font({family:'微软雅黑',size:10,anchor:'left',fill:(pass?"#a5a5a5":(i.key==data.selected?(data.new?"#fff":data.color):"#3e3a39"))}),x+18+1+w,y-5,'left','bottom').bbox().width+1;
+                var b114=textalign(group.text('Not yet in service').font({family:flt,size:4,anchor:'left',fill:(pass?"#a5a5a5":(i.key==data.selected?(data.new?"#fff":data.color):"#3e3a39"))}),x+18+1+w,y-5,'left','bottom');
+                var b1919=group.text('暂未开通').font({family:'微软雅黑',size:6,anchor:'left',fill:(pass?"#a5a5a5":(i.key==data.selected?(data.new?"#fff":data.color):"#3e3a39"))});
+                textalign(b1919,x+18+1+w+(b114.bbox().width-b1919.bbox().width)/2,y-4-b114.bbox().height,'left','bottom');
+                textalign(group.text(')').font({family:'微软雅黑',size:10,anchor:'left',fill:(pass?"#a5a5a5":(i.key==data.selected?(data.new?"#fff":data.color):"#3e3a39"))}),x+18+1+w+b114.bbox().width+1,y-5,'left','bottom');
+            }
+            if(i.key==data.selected&&data.new){
+                var pad=3;
+                var [_path,E]=buildPath({x:0,y:0,h:group.bbox().height+pad,w:group.bbox().width});
+                var xx=x+18-(group.bbox().height+pad/2)/Math.sin(48*Math.PI/180);
+                var yy=y-3.7;
+                textalign(path.plot(_path).fill(data.color),xx,yy,'left','bottom');
+                rect3.size(group.bbox().height+pad,group.bbox().height+pad).radius((group.bbox().height+pad)/2).center(E[0]+x+18+1,-E[1]+yy+1).fill(data.color);
+            }
+            group.rotate(-48,x+18,y-5);
+            if(i.interchange){
+                if(i.interchange.length==1)y_+=interchange2(draw,x+16.25,y+6,[data.color,i.interchange[0][1]],'right');
+                else y_+=interchange3(draw,x+16.25,y+6,[data.color,i.interchange[0][1],i.interchange[1][1]],'right');
+                i.interchange.forEach(j=>{
+                    y_+=14;
+                    draw.rect(12,12).center(x+15,y_).radius(6).fill(j[1]);
+                    draw.text(j[0]).font({family:flt,size:7,anchor:'middle',fill:"#fff"}).center(x+15,y_);
+                })
+            }
+            if(!data.left_door&&i.key!=data.selected)pass=!pass;
+            if(pass==false)pass=i.key==data.selected;
+            x+=(data.b_width-data.margin-30)/(stations.length-1);
+        });
+        ww+=15/4*3-0.5;
+        rect.size(ww,8).move(data.left_door?data.a_width+data.b_width-ww-4-data.margin/2:data.a_width+data.margin/2+4,y-4);
+        rect2.move(data.left_door?data.a_width+data.b_width-data.margin/2-8:data.a_width+data.margin/2,y-4);
+    }
+    document.querySelector("#draw>svg").style.width=(data.a_width+data.b_width)*data.scale+'px';
+    document.querySelector("#draw>svg").style.height=(data.height)*data.scale+'px';
+    var style=document.createElement("style");
+    style.innerText=`@font-face{font-family:"FrutigerLT55Roman";src:url(${await loadFontAsDataURL("./Frutiger LT 55 Roman.ttf")});}`;
+    document.querySelector("#draw>svg").appendChild(style);
+    document.querySelector("#draw").scrollLeft=scroll;
+    // svg2png(document.querySelector("#draw").innerHTML,(data.a_width+data.b_width)*data.scale,data.height*data.scale,1,data.name[0].replace(' ','_')+'_导出');
+}
