@@ -7,6 +7,73 @@
     <link rel="stylesheet" type="text/css" href="style.css" />
   </head>
   <body>
+    <!-- ========== 下面整块复制，插入到原始index.html的</body>标签之前，原有代码完全不动 ========== -->
+<!-- Cloudflare Turnstile SDK -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+<!-- Turnstile 验证弹窗 -->
+<div id="cf-turnstile-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.75);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;padding:24px;border-radius:10px;box-shadow:0 4px 20px #0003;min-width:300px;">
+    <h3 style="margin-top:0;text-align:center;">请完成人机验证</h3>
+    <div class="cf-turnstile" data-sitekey="YOUR_TURNSTILE_SITEKEY" data-callback="onTurnstileSuccess"></div>
+    <button onclick="closeVerifyModal()" style="margin-top:14px;width:100%;padding:8px;border:1px solid #ccc;background:#f5f5f5;border-radius:6px;cursor:pointer;">取消</button>
+  </div>
+</div>
+
+<script>
+let turnstileToken = "";
+// 修改为你的 Worker 验证接口地址
+const VERIFY_API = "https://cdmetro-verify.xxx.workers.dev/api/verify";
+// 保存原始导出函数引用
+const originalExport = exportSvgImage;
+
+window.onTurnstileSuccess = async function (token) {
+  turnstileToken = token;
+  try {
+    const res = await fetch(VERIFY_API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token })
+    });
+    const data = await res.json();
+    if (data.success) {
+      closeVerifyModal();
+      // 调用原生原版导出逻辑
+      originalExport();
+    } else {
+      alert("人机验证失败，请重试");
+      turnstileToken = "";
+      turnstile.reset();
+    }
+  } catch (err) {
+    alert("验证服务异常，请稍后再试");
+    console.error(err);
+  }
+};
+
+function openVerifyModal() {
+  const modal = document.getElementById("cf-turnstile-modal");
+  modal.style.display = "flex";
+  turnstile.render('.cf-turnstile');
+}
+function closeVerifyModal() {
+  const modal = document.getElementById("cf-turnstile-modal");
+  modal.style.display = "none";
+  turnstileToken = "";
+  turnstile.reset();
+}
+
+// 劫持导出按钮点击，不修改原有按钮onclick绑定
+document.getElementById("exportBtn").addEventListener("click", function(e){
+  e.stopImmediatePropagation();
+  if (!turnstileToken) {
+    openVerifyModal();
+  } else {
+    originalExport();
+  }
+});
+</script>
+<!-- ========== 新增代码结束，后面直接保留原有</body> ========== -->
     <div id="top">
         <h3>成都地铁吊板生成器</h3>
         <div class="btn new">新建项目</div>
